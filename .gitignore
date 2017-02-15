@@ -1,5 +1,6 @@
 venv/*
 notes/*
+*.pem
 *.prod
 *.pyc
 *.log

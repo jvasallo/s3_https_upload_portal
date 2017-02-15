@@ -7,11 +7,16 @@ import logging
 import base64
 import urllib2
 import json
+import flask
 from flask import Flask
 from flask import render_template
 from flask import request
 from jinja2 import Environment
 from jinja2 import FileSystemLoader
+from flask_sslify import SSLify
+import flask_login
+import bcrypt
+
 from datetime import datetime
 from datetime import timedelta
 from libs.utils import gen_policy
@@ -30,17 +35,92 @@ from libs.utils import init
 from libs.utils import dt_to_string
 
 
-application = app = Flask(__name__)
+application = app = flask.Flask(__name__)
+sslify = SSLify(app)
 init()
 PREFIX = 'uploads/'  # name of uploads folder in bucket. must end in /
+
+# Login mamanger 
+
+app.secret_key = 'qwerty1234567'
+login_manager = flask_login.LoginManager()
+login_manager.init_app(app)
+
+ausers = {'fg-support': {'pw': '$2b$12$Y6p08kLzs02Kt9LTIo2jV.0CXpaWJyxTf9SUmB3eTOig7WTofqt0W'},
+          'fg-field':   {'pw': '$2b$12$Y6p08kLzs02Kt9LTIo2jV.0CXpaWJyxTf9SUmB3eTOig7WTofqt0W'}}
+
+class User(flask_login.UserMixin):
+    pass
+
+@login_manager.user_loader
+def user_loader(uname):
+    if uname not in ausers:
+        return
+
+    user = User()
+    user.id = uname
+    return user
+
+
+# @login_manager.request_loader
+# def request_loader(request):
+#    uname = request.form.get('uname')
+#    print 'fromform', uname
+#    if uname not in ausers:
+#        return
+#
+#    user = User()
+#    user.id = uname
+#
+    # DO NOT ever store passwords in plaintext and always compare password
+    # hashes using constant-time comparison!
+#    lhash = bcrypt.hashpw(request.form['pw'].encode('utf-8'), bcrypt.gensalt())
+#    print request.form['pw'].encode('utf-8')
+#    user.is_authenticated = bcrypt.hashpw(request.form['pw'].encode('utf-8'), lhash) == lhash
+#
+#    return user
+
+@login_manager.unauthorized_handler
+def unauthorized_handler():
+    return 'Unauthorized: this url requires a valid login'
+
+#end of login mamanger specifics
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if flask.request.method == 'GET':
+        return '''
+               <form action='login' method='POST'>
+                <input type='text' name='uname' id='uname' placeholder='uname'></input>
+                <input type='password' name='pw' id='pw' placeholder='password'></input>
+                <input type='submit' name='submit'></input>
+               </form>
+               '''
+
+    uname = flask.request.form['uname']
+    # print 'fromform', uname
+    # print 'fromf-pw', flask.request.form['pw']
+    if uname not in ausers:
+        return render_template('loginerror.html', message='Login Incorrect')
+
+    matched = bcrypt.hashpw(flask.request.form['pw'].encode('utf-8'), ausers[uname]['pw']) == ausers[uname]['pw']
+    if matched :
+        user = User()
+        user.id = uname
+        flask_login.login_user(user)
+        # return flask.redirect(flask.url_for('/generate'))
+        return render_template('index.html')
+
+    return render_template('loginerror.html', message='Login Incorrect')
 
 
 @app.errorhandler(404)
 def page_not_found(e):
-    return render_template('error.html', message='Not Found')
+    return render_template('error.html', message='Page Not Found')
 
 
 @app.route('/ztreeapi')
+@flask_login.login_required
 def ztreeapi():
     if not request.is_xhr:
         return ''
@@ -55,6 +135,7 @@ def ztreeapi():
 
 
 @app.route('/files')
+@flask_login.login_required
 def list_files():
     try:
         folder = request.args['folder']
@@ -88,6 +169,7 @@ def index():
 
 
 @app.route('/bucketparams')
+@flask_login.login_required
 def form_params():
     now = datetime.now()
     defaultdate = (now + timedelta(days=180)).isoformat()[:10]
@@ -101,6 +183,7 @@ def info():
 
 
 @app.route('/gendl')
+@flask_login.login_required
 def generate_dl_link():
     filelist = []
     for i in get_s3_files('uploads'):
@@ -127,6 +210,7 @@ def generate_dl_link():
 
 
 @app.route('/generate_form', methods=['POST'])
+@flask_login.login_required
 def generate_form():
 
     try:
@@ -251,4 +335,4 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     logging = setup_logging()
-    application.run(host='0.0.0.0', debug=False)
+    application.run(host='0.0.0.0', debug=False, ssl_context=('cert.pem', 'key.pem'))
