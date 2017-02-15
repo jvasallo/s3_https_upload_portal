@@ -4,3 +4,9 @@ notes/*
 *.pyc
 *.log
 .elasticbeanstalk/
+bin/*
+lib/*
+lib64
+lib64/*
+include/*
+pip-selfcheck.json
