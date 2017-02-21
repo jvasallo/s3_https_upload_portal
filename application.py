@@ -36,7 +36,7 @@ from libs.utils import dt_to_string
 
 
 application = app = flask.Flask(__name__)
-sslify = SSLify(app)
+# sslify = SSLify(app)
 init()
 PREFIX = 'uploads/'  # name of uploads folder in bucket. must end in /
 
@@ -155,9 +155,34 @@ def list_files():
                                d2s=dt_to_string)
 
 
-@app.route('/')
+# @app.route('/')
+# def index():
+#    return render_template('index.html')
+
+@app.route('/',methods=['GET', 'POST'])
 def index():
-    return render_template('index.html')
+        return render_template('index.html')
+
+@app.route('/loginvalidate', methods=['POST'])
+def login_validate():
+    print 'not GET in index'
+    uname = flask.request.form['uname']
+    if uname not in ausers:
+        print 'not in ausers'
+        return render_template('loginerror.html', message='Login Incorrect')
+
+    matched = bcrypt.hashpw(flask.request.form['pw'].encode('utf-8'), ausers[uname]['pw']) == ausers[uname]['pw']
+    if matched :
+        print 'matched'
+        user = User()
+        user.id = uname
+        flask_login.login_user(user,remember=False)
+        # return flask.redirect(flask.url_for('/', _scheme="https", _external=True))
+        return render_template('index.html')
+
+    return render_template('loginerror.html', message='Login Incorrect')
+    
+
 
 
 @app.route('/bucketparams')
@@ -324,4 +349,4 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     logging = setup_logging()
-    application.run(host='0.0.0.0', debug=True, ssl_context=('cert.pem', 'key.pem'))
+    application.run(host='0.0.0.0')  # ssl_context=('cert.pem', 'key.pem') #/)
