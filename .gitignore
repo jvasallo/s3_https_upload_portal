@@ -1,5 +1,7 @@
 venv/*
 notes/*
+.vscode/
+*.zip
 *.pem
 *.prod
 *.pyc

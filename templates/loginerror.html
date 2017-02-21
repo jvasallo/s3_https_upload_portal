@@ -11,10 +11,13 @@
     {% include 'navbar.html' %}
 
     <div class="container">
-     <div class="container col-md-12">
-      <h3 class="brand"><a href="/">Customer Upload Portal - Endpoint Generator</a></h3>
-      <div class="page-header">
-            <div class="alert alert-danger">{{message}}</div>
-      </div>
+     <div class="container col-md-6 col-offset-md-4">
+        <div class="jumbotron">
+          <div class="alert alert-danger">{{message}}</div>
+          <div class="container btn-center">
+            <a href="/login" class="btn btn-lg btn-primary">return to login</a>
+            <a href="/" class="btn btn-lg btn-primary">HOME</a>
+          </div>  
+        </div>  
   </body>
 </html>

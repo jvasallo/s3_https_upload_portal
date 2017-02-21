@@ -40,7 +40,7 @@ sslify = SSLify(app)
 init()
 PREFIX = 'uploads/'  # name of uploads folder in bucket. must end in /
 
-# Login mamanger 
+# Login mamanger
 
 app.secret_key = 'qwerty1234567'
 login_manager = flask_login.LoginManager()
@@ -82,24 +82,16 @@ def user_loader(uname):
 
 @login_manager.unauthorized_handler
 def unauthorized_handler():
-    return 'Unauthorized: this url requires a valid login'
+    return render_template('loginerror.html', message='Unauthorized: this page requires a valid login')
 
-#end of login mamanger specifics
+# -------------------    end of login mamanger specifics
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if flask.request.method == 'GET':
-        return '''
-               <form action='login' method='POST'>
-                <input type='text' name='uname' id='uname' placeholder='uname'></input>
-                <input type='password' name='pw' id='pw' placeholder='password'></input>
-                <input type='submit' name='submit'></input>
-               </form>
-               '''
+        return render_template('login-simple-form.html')
 
     uname = flask.request.form['uname']
-    # print 'fromform', uname
-    # print 'fromf-pw', flask.request.form['pw']
     if uname not in ausers:
         return render_template('loginerror.html', message='Login Incorrect')
 
@@ -107,8 +99,8 @@ def login():
     if matched :
         user = User()
         user.id = uname
-        flask_login.login_user(user)
-        # return flask.redirect(flask.url_for('/generate'))
+        flask_login.login_user(user,remember=False)
+        # return flask.redirect(flask.url_for('/', _scheme="https", _external=True))
         return render_template('index.html')
 
     return render_template('loginerror.html', message='Login Incorrect')
@@ -274,8 +266,7 @@ def generate_form():
                                         secret=secret_key)
     except:
         return render_template('error.html',
-                               message='Error Sign Policy: %s'
-                                       % str(sys.exc_info()))
+                               message='Error Sign Policy: %s' % str(sys.exc_info()))
 
     try:
         env = Environment(loader=FileSystemLoader('templates'))
@@ -289,8 +280,7 @@ def generate_form():
                                directory=directory)
     except:
         return render_template('error.html',
-                               message='Error rendering template: %s'
-                                       % str(sys.exc_info()))
+                               message='Error rendering template: %s' % str(sys.exc_info()))
 
     try:
         create_folder_and_lifecycle(bucket_name=bucket_name,
@@ -306,8 +296,7 @@ def generate_form():
                         bucket_name=bucket_name)
     except:
         return render_template('error.html',
-                               message='Error uploading to s3: %s'
-                                       % str(sys.exc_info()))
+                               message='Error uploading to s3: %s' % str(sys.exc_info()))
 
     if url is None:
         return render_template('error.html',
@@ -335,4 +324,4 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     logging = setup_logging()
-    application.run(host='0.0.0.0', debug=False, ssl_context=('cert.pem', 'key.pem'))
+    application.run(host='0.0.0.0', debug=True, ssl_context=('cert.pem', 'key.pem'))
