@@ -82,14 +82,16 @@ def user_loader(uname):
 
 @login_manager.unauthorized_handler
 def unauthorized_handler():
-    return render_template('loginerror.html', message='Unauthorized: this page requires a valid login', ua=False)
+    return render_template('loginerror.html',
+                           message='Unauthorized: this page requires a valid login',
+                           ua=False)
 
-# -------------------    end of login mamanger specifics
+# -------------------    end of login mamanger 
 
 @app.route('/logout')
 def logout():
     cuser = flask_login.current_user
-    if cuser.is_authenticated :
+    if cuser.is_authenticated : 
         flask_login.logout_user()
        
     return render_template('index_login.html', ua = False)
@@ -151,10 +153,10 @@ def list_files():
         return render_template('file_list.html',
                                folder=folder, ua = True)
     else:
-        # try:
+        try:
             # get the file listing
             s3_files = get_s3_files_table(prefix=PREFIX + folder)
-       #  except:
+        except:
             # return render_template('error.html',
             #                      message='Error %s' % str(sys.exc_info()), ua = True)
             return render_template('file_list_table.html',
@@ -162,10 +164,6 @@ def list_files():
                                folder=folder,
                                d2s=dt_to_string, ua = True)
 
-
-# @app.route('/')
-# def index():
-#    return render_template('index.html')
 
 @app.route('/',methods=['GET', 'POST'])
 def index():
