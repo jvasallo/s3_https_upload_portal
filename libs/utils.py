@@ -141,6 +141,7 @@ def get_s3_files(prefix):
 
 def get_s3_files_table(prefix):
     ''' list files from s3, to be used with table listing; return dicts '''
+   
     bucket_name = os.environ['BUCKET']
 
     try:
@@ -160,10 +161,11 @@ def get_s3_files_table(prefix):
         key = f.name[len(prefix):]
         directory = key.partition('/')[0]
         filename = key.partition('/')[-1]
-        cb64 = urllib2.quote((f.name).encode('base64').rstrip())
+        cb64 = urllib2.quote((f.name).encode('utf-8').rstrip())
         vb64 = urllib2.quote(f.version_id.encode('base64').rstrip())
         dfmt = '%Y-%m-%dT%H:%M:%S.000Z'
         date = datetime.strptime(f.last_modified, dfmt)
+
         d = { 'name' : filename,
               'dir'  : directory,
               'v_id' : f.version_id,
@@ -207,7 +209,7 @@ def ztree_files(prefix):
             last_modified = child[2]
             size = child[3]
             filestring = '[%s] %s - %s MiB' % (last_modified, name, size)  # the displayed text
-            cb64 = urllib2.quote((prefix + key + '/' + name).encode('base64').rstrip())  # used for download link only
+            cb64 = urllib2.quote((prefix + key + '/' + name).encode('utf-8').rstrip())  # used for download link only
             vb64 = urllib2.quote(version_id.encode('base64').rstrip())
             childdict.append({'name': filestring,
                               'url': '/gendl?keyname=' + cb64 + '&version=' + vb64})
@@ -318,7 +320,7 @@ def create_folder_and_lifecycle(bucket_name, directory, expiration):
     # if there are no files in this folder yet, create a placeholder lifecycle file
     try:
         count = 0
-        files = bucket.list(prefix=directory)
+        files = bucket.list_versions(prefix=directory)
         for f in files:
             count += 1
         if count <= 1:  # insert a dummy file; needed elsewise the policy won't apply

@@ -82,18 +82,26 @@ def user_loader(uname):
 
 @login_manager.unauthorized_handler
 def unauthorized_handler():
-    return render_template('loginerror.html', message='Unauthorized: this page requires a valid login')
+    return render_template('loginerror.html', message='Unauthorized: this page requires a valid login', ua=False)
 
 # -------------------    end of login mamanger specifics
+
+@app.route('/logout')
+def logout():
+    cuser = flask_login.current_user
+    if cuser.is_authenticated :
+        flask_login.logout_user()
+       
+    return render_template('index_login.html', ua = False)
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if flask.request.method == 'GET':
-        return render_template('login-simple-form.html')
+        return render_template('index_login.html', ua = False)
 
     uname = flask.request.form['uname']
     if uname not in ausers:
-        return render_template('loginerror.html', message='Login Incorrect')
+        return render_template('loginerror.html', message='Login Incorrect', ua = False)
 
     matched = bcrypt.hashpw(flask.request.form['pw'].encode('utf-8'), ausers[uname]['pw']) == ausers[uname]['pw']
     if matched :
@@ -101,9 +109,9 @@ def login():
         user.id = uname
         flask_login.login_user(user,remember=False)
         # return flask.redirect(flask.url_for('/', _scheme="https", _external=True))
-        return render_template('index.html')
+        return render_template('index.html', ua = True)
 
-    return render_template('loginerror.html', message='Login Incorrect')
+    return render_template('loginerror.html', message='Login Incorrect', ua = False )
 
 
 @app.errorhandler(404)
@@ -141,18 +149,18 @@ def list_files():
 
     if view == 'tree':
         return render_template('file_list.html',
-                               folder=folder)
+                               folder=folder, ua = True)
     else:
-        try:
+        # try:
             # get the file listing
             s3_files = get_s3_files_table(prefix=PREFIX + folder)
-        except:
-            return render_template('error.html',
-                                   message='Error %s' % str(sys.exc_info()))
-        return render_template('file_list_table.html',
+       #  except:
+            # return render_template('error.html',
+            #                      message='Error %s' % str(sys.exc_info()), ua = True)
+            return render_template('file_list_table.html',
                                files=s3_files,
                                folder=folder,
-                               d2s=dt_to_string)
+                               d2s=dt_to_string, ua = True)
 
 
 # @app.route('/')
@@ -161,28 +169,28 @@ def list_files():
 
 @app.route('/',methods=['GET', 'POST'])
 def index():
-        return render_template('index.html')
+    if flask_login.current_user.is_authenticated: 
+        return render_template('index.html', ua = True )
+    else:
+        return render_template('index_login.html', ua = False)
 
 @app.route('/loginvalidate', methods=['POST'])
 def login_validate():
-    print 'not GET in index'
+    ua = False
     uname = flask.request.form['uname']
     if uname not in ausers:
-        print 'not in ausers'
-        return render_template('loginerror.html', message='Login Incorrect')
+        return render_template('loginerror.html', ua, message='Login Incorrect')
 
     matched = bcrypt.hashpw(flask.request.form['pw'].encode('utf-8'), ausers[uname]['pw']) == ausers[uname]['pw']
     if matched :
-        print 'matched'
         user = User()
         user.id = uname
         flask_login.login_user(user,remember=False)
+        ua = True
         # return flask.redirect(flask.url_for('/', _scheme="https", _external=True))
-        return render_template('index.html')
+        return render_template('index.html', ua )
 
-    return render_template('loginerror.html', message='Login Incorrect')
-    
-
+    return render_template('loginerror.html', ua, message='Login Incorrect')
 
 
 @app.route('/bucketparams')
@@ -191,12 +199,13 @@ def form_params():
     now = datetime.now()
     defaultdate = (now + timedelta(days=180)).isoformat()[:10]
     return render_template('formgen.html',
-                           defaultdate=defaultdate)
+                           defaultdate=defaultdate, ua = True )
 
 
 @app.route('/info')
 def info():
-    return render_template('info.html')
+    ua = flask_login.current_user.is_authenticated
+    return render_template('info.html', ua=flask_login.current_user.is_authenticated )
 
 
 @app.route('/gendl')
@@ -207,7 +216,9 @@ def generate_dl_link():
         filelist.append(i[0])
     try:
         keyname = request.args['keyname']
-        keyname = base64.decodestring(urllib2.unquote(keyname))
+       # keyname = base64.decodestring(urllib2.unquote(keyname))
+        keyname = urllib2.unquote(keyname)
+        print 'dendl :' + keyname
         version_id = request.args['version']
         version_id = base64.decodestring(urllib2.unquote(version_id))
         assert keyname in filelist
@@ -218,23 +229,24 @@ def generate_dl_link():
         return render_template('s3_redir_dl.html',
                                url=dl_url,
                                keyname=keyname,
-                               filename=filename)
+                               filename=filename, ua = True)
 
     except:
         return render_template('error.html',
                                message='Invalid Parameters %s'
-                                       % str(sys.exc_info()))
+                                       % str(sys.exc_info()), ua = True)
 
 
 @app.route('/generate_form', methods=['POST'])
 @flask_login.login_required
 def generate_form():
+    ua = True
 
     try:
         bucket_name = os.environ['BUCKET']
         access_key, secret_key = get_env_creds()
     except:
-        return render_template('error.html',
+        return render_template('error.html', ua = True, 
                                message='Error obtaining valid creds: %s'
                                        % str(sys.exc_info()))
 
@@ -243,21 +255,21 @@ def generate_form():
         lc_expiration = int(lc_expiration)
         assert lc_expiration <= 180
     except:
-        return render_template('error.html',
+        return render_template('error.html', ua = True, 
                                message='Invalid Lifecycle Duration')
 
     try:
         exp = request.form['exp']
         exp = datetime.strptime(exp, '%Y-%m-%d').isoformat() + 'Z'
     except:
-        return render_template('error.html',
+        return render_template('error.html', ua = True,
                                message='Invalid Expiration Date')
 
     try:
         maxupload = request.form['maxupload']
         max_megs = int(maxupload) / (1024 * 1024)
     except:
-        return render_template('error.html',
+        return render_template('error.html', ua = True,
                                message='Invalid File Size')
 
     try:
@@ -266,7 +278,7 @@ def generate_form():
         assert directory != ''
         directory = 'uploads/' + directory
     except:
-        return render_template('error.html',
+        return render_template('error.html', ua = True, 
                                message='Invalid/Empty Name for \
                                Customer/Identifier. \'A-Z\', \'0-9\',\
                                 \'-\' and \'_\' only.')
@@ -282,7 +294,7 @@ def generate_form():
                             max_byte_size = maxupload,
                             directory     = directory)
     except:
-        return render_template('error.html',
+        return render_template('error.html', ua = True,
                                message='Error Gen Policy: %s'
                                        % str(sys.exc_info()))
 
@@ -290,7 +302,7 @@ def generate_form():
         signature, policy = sign_policy(policy=policy,
                                         secret=secret_key)
     except:
-        return render_template('error.html',
+        return render_template('error.html', ua = True,
                                message='Error Sign Policy: %s' % str(sys.exc_info()))
 
     try:
@@ -304,7 +316,7 @@ def generate_form():
                                notes=notes,
                                directory=directory)
     except:
-        return render_template('error.html',
+        return render_template('error.html', ua = True,
                                message='Error rendering template: %s' % str(sys.exc_info()))
 
     try:
@@ -312,7 +324,7 @@ def generate_form():
                                     directory=directory,
                                     expiration=lc_expiration)
     except:
-        return render_template('error.html',
+        return render_template('error.html', ua = True,
                                message='Error setting lifecycle: %s'
                                        % str(sys.exc_info()))
 
@@ -320,11 +332,11 @@ def generate_form():
         url = upload_s3(contents=html,
                         bucket_name=bucket_name)
     except:
-        return render_template('error.html',
+        return render_template('error.html', ua = True, 
                                message='Error uploading to s3: %s' % str(sys.exc_info()))
 
     if url is None:
-        return render_template('error.html',
+        return render_template('error.html', ua = True,
                                message='Could not generate URL. Check Logs')
 
     # strip signature from url; we dont need since the form is public
@@ -342,11 +354,13 @@ def generate_form():
                            signature=signature,
                            directory=directory,
                            url_root=request.url_root,
-                           portal=portal)
+                           portal=portal, 
+                           ua = True)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='HTTPS Upload')
     args = parser.parse_args()
 
     logging = setup_logging()
-    application.run(host='0.0.0.0')  # ssl_context=('cert.pem', 'key.pem') #/)
+    # application.run(host='0.0.0.0', debug=True, ssl_context=('cert.pem', 'key.pem'))
+    application.run(host='0.0.0.0')

@@ -1,10 +1,17 @@
-<div class="navbar navbar-inverse navbar-fixed-top" role="navigation">
+<nav class="navbar navbar-inverse">
   <div class="container-fluid">
-    <div class="navbar-header">
-      <a href="/" class="navbar-brand"><img src="/static/images/flashgrid-logo-white.png" style="height: 110%; padding-right: 30px" />HTTPS File Uploader</a>
+    <div class="row">
+    <div class="navbar-header col-offset-1 col-2">
+      <a class="navbar-brand" href="/"><img class="navbar-brand" src="static/images/flashgrid-logo-white.png" style="height: 110%; padding-right: 30px"/>FlashGrid Support Upload</a>
     </div>
-    <div class="collapse navbar-collapse">
-    </div>
-  </div>
-</div>
-<br><br><br>
+    <ul class="nav navbar-nav col-4">
+      <li><a href="/">About</a></li>
+      <li><a href="/files">View Files</a></li>
+      <li><a href="/bucketparams">Create New Portal</a></li>
+    </ul>
+    {% if ua %}
+    <a href="/logout" class="btn btn-sm btn-danger navbar-right navbar-btn" style="margin-right: 20px">Logout</a>
+    {% endif %}
+    </div> <!-- end of row -->
+  </div> <!-- end of container-fluid -->
+</nav>
