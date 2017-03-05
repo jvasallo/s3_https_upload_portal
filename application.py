@@ -157,9 +157,9 @@ def list_files():
             # get the file listing
             s3_files = get_s3_files_table(prefix=PREFIX + folder)
         except:
-            # return render_template('error.html',
-            #                      message='Error %s' % str(sys.exc_info()), ua = True)
-            return render_template('file_list_table.html',
+            return render_template('error.html',
+                                   message='Error %s' % str(sys.exc_info()), ua = True)
+    return render_template('file_list_table.html',
                                files=s3_files,
                                folder=folder,
                                d2s=dt_to_string, ua = True)
@@ -216,7 +216,7 @@ def generate_dl_link():
         keyname = request.args['keyname']
        # keyname = base64.decodestring(urllib2.unquote(keyname))
         keyname = urllib2.unquote(keyname)
-        print 'dendl :' + keyname
+        # print 'dendl :' + keyname
         version_id = request.args['version']
         version_id = base64.decodestring(urllib2.unquote(version_id))
         assert keyname in filelist

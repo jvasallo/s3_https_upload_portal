@@ -1,13 +1,13 @@
-<nav class="navbar navbar-inverse">
-  <div class="container-fluid">
+<nav class="navbar navbar-inverse navbar-top">
+  <div class="container">
     <div class="row">
-    <div class="navbar-header col-offset-1 col-2">
-      <a class="navbar-brand" href="/"><img class="navbar-brand" src="static/images/flashgrid-logo-white.png" style="height: 110%; padding-right: 30px"/>FlashGrid Support Upload</a>
+    <div class="navbar-header">
+      <a class="navbar-brand" href="/"><img src="static/images/flashgrid-logo-white.png" style="height: 110%; padding-right: 30px"/img></a>
     </div>
     <ul class="nav navbar-nav col-4">
-      <li><a href="/">About</a></li>
+      <li><a href="/info">About</a></li>
       <li><a href="/files">View Files</a></li>
-      <li><a href="/bucketparams">Create New Portal</a></li>
+      <li><a href="/bucketparams">Create New Endpoint</a></li>
     </ul>
     {% if ua %}
     <a href="/logout" class="btn btn-sm btn-danger navbar-right navbar-btn" style="margin-right: 20px">Logout</a>

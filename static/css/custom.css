@@ -15,6 +15,10 @@ body {
   transform: scale(1.2);
 }
 
+.navbar-top {
+  border-radius: 0;
+}
+
 
 .form-group .form-group-nav .form-control {
   padding: 19px 29px 29px;
