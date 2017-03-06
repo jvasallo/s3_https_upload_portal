@@ -47,7 +47,8 @@ login_manager = flask_login.LoginManager()
 login_manager.init_app(app)
 
 ausers = {'fg-support': {'pw': '$2b$12$Y6p08kLzs02Kt9LTIo2jV.0CXpaWJyxTf9SUmB3eTOig7WTofqt0W'},
-          'fg-field':   {'pw': '$2b$12$Y6p08kLzs02Kt9LTIo2jV.0CXpaWJyxTf9SUmB3eTOig7WTofqt0W'}}
+          'fg-sup':     {'pw': '$2y$10$9.MxVMIUDdFIrpNkv2eZn.IJRquyq2AdWTWaePBK4Vu2L1kQEaOPm'},
+          'fg-field':   {'pw': '$2y$10$6RVu3Kzze7DOQ2Fp9gqrCuQQgvAFWcq0EGE7GFysPFYgBVFp8hhxe'}}
 
 class User(flask_login.UserMixin):
     pass
