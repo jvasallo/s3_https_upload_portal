@@ -82,7 +82,7 @@ There are three required configuration parameters. Since this is intended for el
 * Clone this repo
 * Make an elastic beanstalk zip archive:
 
-`zip -r archive.zip application.py libs requirements.txt static templates`
+`zip -r archive.zip application.py libs requirements.txt static templates .ebsextentions`
 
 Note; you must create a zip in this manner. Elastic Beanstalk requires all files unzip and NOT have a top level directory. If you 'download Zip' from GitHub, you get a top level directory and elastic beanstalk won't work.
 
