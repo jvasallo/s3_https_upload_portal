@@ -57,6 +57,9 @@ When you click a file to download, the web application generates a temporary pre
 
 ### Authentication
 
+**Update** Augist 2017 (alex-miro). A very basic authentication password based authentication code is now included, the passwords are hardcoded in via bcrypt hashas. This is just an example to test the authentication points. The real deployment uses Oath2.0.
+HTTPS support has been added, however the production code relies on an external web server for https termination.
+
 Its extremely important to realize that this web application does not have a layer of authentication built in. That is, when you deploy this app, determine how you want to limit access to this application. Do NOT make it accessible to /0 otherwise anyone could use it to just download your files.
 
 If you deploy this to elastic beanstalk, make sure to adjust the associated security-group. We recommend a single instance (no elastic load balancer) since the app itself is very thin. If you decide to use an elastic load balancer and an auto-scaling group, make sure to deploy this within a VPC so you can restrict access to the application via VPC constraints.
@@ -66,6 +69,8 @@ Some options: implement a layer of authentication at a load balancer fronting th
 ## Requirements
 
 This application is a python flask application, designed to be deployed via elastic beanstalk in AWS. Although it is intended to be run in elastic beanstalk, you could run it as a standalone python app, too.
+
+**Update** April 2018 (alex-miro). The production code no longer assumes EBS due to multiple issues introduced by the latest EBS rollouts. At some point I will make it a AWS Lamda webapp.
 
 ## Configuration
 
