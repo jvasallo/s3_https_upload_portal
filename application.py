@@ -5,7 +5,7 @@ import sys
 import argparse
 import logging
 import base64
-import urllib2
+import urllib
 import json
 import flask
 from flask import Flask
@@ -47,7 +47,7 @@ login_manager = flask_login.LoginManager()
 login_manager.init_app(app)
 
 ausers = {'fg-support': {'pw': '$2b$12$Y6p08kLzs02Kt9LTIo2jV.0CXpaWJyxTf9SUmB3eTOig7WTofqt0W'},
-          'fg-sup':     {'pw': '$2y$10$9.MxVMIUDdFIrpNkv2eZn.IJRquyq2AdWTWaePBK4Vu2L1kQEaOPm'},
+          'fg-sup':     {'pw': 'test'},
           'fg-field':   {'pw': '$2y$10$6RVu3Kzze7DOQ2Fp9gqrCuQQgvAFWcq0EGE7GFysPFYgBVFp8hhxe'}}
 
 class User(flask_login.UserMixin):
@@ -66,7 +66,7 @@ def user_loader(uname):
 # @login_manager.request_loader
 # def request_loader(request):
 #    uname = request.form.get('uname')
-#    print 'fromform', uname
+#    print('fromform', uname)
 #    if uname not in ausers:
 #        return
 #
@@ -76,7 +76,7 @@ def user_loader(uname):
     # DO NOT ever store passwords in plaintext and always compare password
     # hashes using constant-time comparison!
 #    lhash = bcrypt.hashpw(request.form['pw'].encode('utf-8'), bcrypt.gensalt())
-#    print request.form['pw'].encode('utf-8')
+#    print(request.form['pw'].encode('utf-8'))
 #    user.is_authenticated = bcrypt.hashpw(request.form['pw'].encode('utf-8'), lhash) == lhash
 #
 #    return user
@@ -105,8 +105,7 @@ def login():
     uname = flask.request.form['uname']
     if uname not in ausers:
         return render_template('loginerror.html', message='Login Incorrect', ua = False)
-
-    matched = bcrypt.hashpw(flask.request.form['pw'].encode('utf-8'), ausers[uname]['pw']) == ausers[uname]['pw']
+    matched = flask.request.form['pw'] == ausers[uname]['pw']
     if matched :
         user = User()
         user.id = uname
@@ -180,7 +179,7 @@ def login_validate():
     if uname not in ausers:
         return render_template('loginerror.html', ua, message='Login Incorrect')
 
-    matched = bcrypt.hashpw(flask.request.form['pw'].encode('utf-8'), ausers[uname]['pw']) == ausers[uname]['pw']
+    matched = flask.request.form['pw'] == ausers[uname]['pw']
     if matched :
         user = User()
         user.id = uname
@@ -215,11 +214,11 @@ def generate_dl_link():
         filelist.append(i[0])
     try:
         keyname = request.args['keyname']
-       # keyname = base64.decodestring(urllib2.unquote(keyname))
-        keyname = urllib2.unquote(keyname)
-        # print 'dendl :' + keyname
+       # keyname = base64.decodestring(urllib.parse.unquote(keyname))
+        keyname = urllib.parse.unquote(keyname)
+        # print('dendl :' + keyname)
         version_id = request.args['version']
-        version_id = base64.decodestring(urllib2.unquote(version_id))
+        version_id = base64.decodestring(urllib.parse.unquote(version_id))
         assert keyname in filelist
         dl_url = get_temp_s3_url(keyname, version_id)
         filename = keyname.split('/')[-1]
@@ -361,5 +360,5 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     logging = setup_logging()
-    # application.run(host='0.0.0.0', debug=True, ssl_context=('cert.pem', 'key.pem'))
-    application.run(host='0.0.0.0')
+    application.run(host='0.0.0.0', debug=True) #, ssl_context=('cert.pem', 'key.pem'))
+    #application.run(host='0.0.0.0')

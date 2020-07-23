@@ -9,7 +9,7 @@ import uuid
 import string
 import os
 import json
-import urllib2
+import urllib
 import logging
 from boto.s3.lifecycle import Lifecycle
 from datetime import datetime
@@ -38,10 +38,10 @@ def init():
         ak, sk = get_env_creds()
         bucket_name = os.environ['BUCKET']
         if '.' in bucket_name:
-            print ('WARNING: You will get SSL errors with a "." '
-                   'in a bucket name - this is because the bucket name will'
-                   ' appear as a subdomain of amazon. We highly encourage you'
-                   ' to chose a bucket name without a dot in it')
+            print('WARNING: You will get SSL errors with a "." '
+                  'in a bucket name - this is because the bucket name will'
+                  ' appear as a subdomain of amazon. We highly encourage you'
+                  ' to chose a bucket name without a dot in it')
         s3 = boto.connect_s3(aws_access_key_id=ak,
                              aws_secret_access_key=sk)
         bucket = s3.get_bucket(bucket_name)
@@ -51,7 +51,7 @@ def init():
         bucket = s3.create_bucket(bucket_name)
         bucket.configure_versioning(True)
     except:
-        print 'Could not create bucket: Error: %s' % (str(sys.exc_info()))
+        print('Could not create bucket: Error: %s' % (str(sys.exc_info())))
         raise
 
     # upload all the static resources (js, css) and make public
@@ -66,7 +66,7 @@ def init():
                     k.set_contents_from_filename(f)
                     k.make_public()
     except S3ResponseError:
-        print 'Could not upload static resources. Error: %s' % (str(sys.exc_info()))
+        print('Could not upload static resources. Error: %s' % (str(sys.exc_info())))
         raise
 
 
@@ -83,16 +83,15 @@ def get_env_creds():
         secret_key = os.environ['AWS_SECRET_KEY']
         return access_key, secret_key
     except:
-        raise Exception('Could not get creds from envvars: %s'
-                        % str(sys.exc_info()))
+        raise Exception('Could not get creds from envvars: %s' % str(sys.exc_info()))
 
 
 # deprecated; cant use temp creds otherwise signatures are temp
 def get_temp_creds():
     ''' returns current set of temp iam role creds '''
     metadata_url = 'http://169.254.169.254/latest/meta-data/iam/security-credentials/'
-    iam_role_name = urllib2.urlopen(metadata_url).read()
-    json_response = json.loads(urllib2.urlopen(metadata_url +
+    iam_role_name = urllib.request.urlopen(metadata_url).read()
+    json_response = json.loads(urllib.request.urlopen(metadata_url +
                                                iam_role_name).read())
     access_key = json_response['AccessKeyId']
     secret_key = json_response['SecretAccessKey']
@@ -161,8 +160,8 @@ def get_s3_files_table(prefix):
         key = f.name[len(prefix):]
         directory = key.partition('/')[0]
         filename = key.partition('/')[-1]
-        cb64 = urllib2.quote((f.name).encode('utf-8').rstrip())
-        vb64 = urllib2.quote(f.version_id.encode('base64').rstrip())
+        cb64 = urllib.parse.quote((f.name).encode('utf-8').rstrip())
+        vb64 = urllib.parse.quote(f.version_id.encode('base64').rstrip())
         dfmt = '%Y-%m-%dT%H:%M:%S.000Z'
         date = datetime.strptime(f.last_modified, dfmt)
 
@@ -209,8 +208,8 @@ def ztree_files(prefix):
             last_modified = child[2]
             size = child[3]
             filestring = '[%s] %s - %s MiB' % (last_modified, name, size)  # the displayed text
-            cb64 = urllib2.quote((prefix + key + '/' + name).encode('utf-8').rstrip())  # used for download link only
-            vb64 = urllib2.quote(version_id.encode('base64').rstrip())
+            cb64 = urllib.parse.quote((prefix + key + '/' + name).encode('utf-8').rstrip())  # used for download link only
+            vb64 = urllib.parse.quote(version_id.encode('base64').rstrip())
             childdict.append({'name': filestring,
                               'url': '/gendl?keyname=' + cb64 + '&version=' + vb64})
         outd.append({'name': key,
@@ -292,7 +291,7 @@ def upload_s3(contents,
                              aws_secret_access_key=sk)
         bucket = s3.get_bucket(bucket_name)
     except:
-        print 'Could not connect to AWS/Bucket: %s' % str(sys.exc_info())
+        print('Could not connect to AWS/Bucket: %s' % str(sys.exc_info()))
 
     try:
         k = boto.s3.key.Key(bucket)
@@ -303,7 +302,7 @@ def upload_s3(contents,
         k.make_public()
         return k.generate_url(expires_in=60 * 60 * 24 * 30)
     except:
-        print 'Error uploading html form to s3'
+        print('Error uploading html form to S3')
 
 
 def create_folder_and_lifecycle(bucket_name, directory, expiration):
@@ -316,7 +315,7 @@ def create_folder_and_lifecycle(bucket_name, directory, expiration):
                              aws_secret_access_key=sk)
         bucket = s3.get_bucket(bucket_name)
     except:
-        print 'Could not connect to AWS/Bucket: %s' % str(sys.exc_info())
+        print('Could not connect to AWS/Bucket: %s' % str(sys.exc_info()))
     # if there are no files in this folder yet, create a placeholder lifecycle file
     try:
         count = 0
